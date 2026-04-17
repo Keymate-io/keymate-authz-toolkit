@@ -1,0 +1,13 @@
+Keymate AuthZ Toolkit (kmctl, Access Rules, Access Rule Engine)
+Copyright 2026 Keymate Authors
+
+This project includes software developed at Keymate (https://github.com/Keymate-io/keymate-authz-toolkit).
+
+It implements well-known architectural patterns. No proprietary or patented algorithms are intentionally included to the best of our knowledge.
+
+This product bundles the following third-party software:
+
+- CEL-Java (https://github.com/google/cel-java), licensed under the Apache License 2.0.
+- Jackson (https://github.com/FasterXML/jackson), licensed under the Apache License 2.0.
+- picocli (https://picocli.info/), licensed under the Apache License 2.0.
+- SLF4J (https://www.slf4j.org/), licensed under the MIT License.

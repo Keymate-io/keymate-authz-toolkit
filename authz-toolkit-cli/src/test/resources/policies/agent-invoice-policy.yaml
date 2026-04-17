@@ -1,0 +1,31 @@
+name: agent-invoice-read
+kind: AccessRuleSet
+version: 1
+
+defaults:
+  enabled: true
+
+rules:
+  - id: agent.invoice.read
+    description: "Invoice read access for agent requests with CEL-based fine-grained conditions"
+    enabled: true
+    match:
+      sourceClientId: invoice-agent
+      targetClientId: invoice-api
+    methods:
+      - GET
+    targetUriPatterns:
+      - /api/v1/tenants/*/invoices/*
+    resources:
+      - name: invoice
+        scopes:
+          - read
+    condition: >
+      agent.type == 'mcp-client'
+      && agent.trust_level >= 3
+      && actor.id != ''
+      && request.channel == 'AGENT'
+      && tenant.id == resource.tenant_id
+      && user.role == 'finance-manager'
+      && risk.score <= 5
+    intent: ALLOW

@@ -1,0 +1,297 @@
+{
+  "policyId": "agent.invoice.read",
+  "scenarios": [
+    {
+      "name": "grant-invoice-read",
+      "description": "Agent request with correct tenant, role, trust, and channel should be granted",
+      "request": {
+        "gatewayMethod": "POST",
+        "gatewayPath": "/gateway/api/v1/access/check-permission",
+        "headers": {
+          "Keymate-Client-Id": "invoice-agent",
+          "Keymate-Target-Client-Id": "invoice-api",
+          "Keymate-Target-Method": "GET",
+          "Keymate-Target-URI": "/api/v1/tenants/T-001/invoices/INV-123"
+        }
+      },
+      "tokenClaims": {
+        "sub": "invoice-agent",
+        "azp": "invoice-agent",
+        "agent_type": "mcp-client",
+        "trust_level": 3,
+        "actor_id": "user-789",
+        "tenant_id": "T-001"
+      },
+      "normalizedContext": {
+        "agent": {
+          "id": "invoice-agent",
+          "type": "mcp-client",
+          "trust_level": 3
+        },
+        "actor": {
+          "id": "user-789"
+        },
+        "tenant": {
+          "id": "T-001"
+        },
+        "user": {
+          "role": "finance-manager"
+        },
+        "risk": {
+          "score": 4
+        },
+        "resource": {
+          "tenant_id": "T-001",
+          "invoice_id": "INV-123"
+        },
+        "request": {
+          "target_method": "GET",
+          "target_uri": "/api/v1/tenants/T-001/invoices/INV-123",
+          "channel": "AGENT"
+        }
+      },
+      "expected": {
+        "matcherDecision": "MATCH",
+        "matchedRuleId": "agent.invoice.read",
+        "celDecision": "GRANT",
+        "finalDecision": "GRANT"
+      }
+    },
+    {
+      "name": "deny-low-trust",
+      "description": "Matching rule should still deny when trust level is below threshold",
+      "request": {
+        "gatewayMethod": "POST",
+        "gatewayPath": "/gateway/api/v1/access/check-permission",
+        "headers": {
+          "Keymate-Client-Id": "invoice-agent",
+          "Keymate-Target-Client-Id": "invoice-api",
+          "Keymate-Target-Method": "GET",
+          "Keymate-Target-URI": "/api/v1/tenants/T-001/invoices/INV-456"
+        }
+      },
+      "tokenClaims": {
+        "sub": "invoice-agent",
+        "azp": "invoice-agent",
+        "agent_type": "mcp-client",
+        "trust_level": 2,
+        "actor_id": "user-789",
+        "tenant_id": "T-001"
+      },
+      "normalizedContext": {
+        "agent": {
+          "id": "invoice-agent",
+          "type": "mcp-client",
+          "trust_level": 2
+        },
+        "actor": {
+          "id": "user-789"
+        },
+        "tenant": {
+          "id": "T-001"
+        },
+        "user": {
+          "role": "finance-manager"
+        },
+        "risk": {
+          "score": 4
+        },
+        "resource": {
+          "tenant_id": "T-001",
+          "invoice_id": "INV-456"
+        },
+        "request": {
+          "target_method": "GET",
+          "target_uri": "/api/v1/tenants/T-001/invoices/INV-456",
+          "channel": "AGENT"
+        }
+      },
+      "expected": {
+        "matcherDecision": "MATCH",
+        "matchedRuleId": "agent.invoice.read",
+        "celDecision": "DENY",
+        "finalDecision": "DENY",
+        "failedConditions": [
+          "agent.trust_level >= 3"
+        ]
+      }
+    },
+    {
+      "name": "deny-tenant-mismatch",
+      "description": "Matching rule should deny when token tenant and resource tenant differ",
+      "request": {
+        "gatewayMethod": "POST",
+        "gatewayPath": "/gateway/api/v1/access/check-permission",
+        "headers": {
+          "Keymate-Client-Id": "invoice-agent",
+          "Keymate-Target-Client-Id": "invoice-api",
+          "Keymate-Target-Method": "GET",
+          "Keymate-Target-URI": "/api/v1/tenants/T-002/invoices/INV-789"
+        }
+      },
+      "tokenClaims": {
+        "sub": "invoice-agent",
+        "azp": "invoice-agent",
+        "agent_type": "mcp-client",
+        "trust_level": 4,
+        "actor_id": "user-789",
+        "tenant_id": "T-001"
+      },
+      "normalizedContext": {
+        "agent": {
+          "id": "invoice-agent",
+          "type": "mcp-client",
+          "trust_level": 4
+        },
+        "actor": {
+          "id": "user-789"
+        },
+        "tenant": {
+          "id": "T-001"
+        },
+        "user": {
+          "role": "finance-manager"
+        },
+        "risk": {
+          "score": 4
+        },
+        "resource": {
+          "tenant_id": "T-002",
+          "invoice_id": "INV-789"
+        },
+        "request": {
+          "target_method": "GET",
+          "target_uri": "/api/v1/tenants/T-002/invoices/INV-789",
+          "channel": "AGENT"
+        }
+      },
+      "expected": {
+        "matcherDecision": "MATCH",
+        "matchedRuleId": "agent.invoice.read",
+        "celDecision": "DENY",
+        "finalDecision": "DENY",
+        "failedConditions": [
+          "tenant.id == resource.tenant_id"
+        ]
+      }
+    },
+    {
+      "name": "deny-missing-actor-context",
+      "description": "Matching rule should deny when actor context is absent even if all other inputs look valid",
+      "request": {
+        "gatewayMethod": "POST",
+        "gatewayPath": "/gateway/api/v1/access/check-permission",
+        "headers": {
+          "Keymate-Client-Id": "invoice-agent",
+          "Keymate-Target-Client-Id": "invoice-api",
+          "Keymate-Target-Method": "GET",
+          "Keymate-Target-URI": "/api/v1/tenants/T-001/invoices/INV-321"
+        }
+      },
+      "tokenClaims": {
+        "sub": "invoice-agent",
+        "azp": "invoice-agent",
+        "agent_type": "mcp-client",
+        "trust_level": 4,
+        "actor_id": "",
+        "tenant_id": "T-001"
+      },
+      "normalizedContext": {
+        "agent": {
+          "id": "invoice-agent",
+          "type": "mcp-client",
+          "trust_level": 4
+        },
+        "actor": {
+          "id": ""
+        },
+        "tenant": {
+          "id": "T-001"
+        },
+        "user": {
+          "role": "finance-manager"
+        },
+        "risk": {
+          "score": 4
+        },
+        "resource": {
+          "tenant_id": "T-001",
+          "invoice_id": "INV-321"
+        },
+        "request": {
+          "target_method": "GET",
+          "target_uri": "/api/v1/tenants/T-001/invoices/INV-321",
+          "channel": "AGENT"
+        }
+      },
+      "expected": {
+        "matcherDecision": "MATCH",
+        "matchedRuleId": "agent.invoice.read",
+        "celDecision": "DENY",
+        "finalDecision": "DENY",
+        "failedConditions": [
+          "actor.id != ''"
+        ]
+      }
+    },
+    {
+      "name": "deny-high-risk",
+      "description": "Matching rule should deny when runtime risk score exceeds the allowed guardrail",
+      "request": {
+        "gatewayMethod": "POST",
+        "gatewayPath": "/gateway/api/v1/access/check-permission",
+        "headers": {
+          "Keymate-Client-Id": "invoice-agent",
+          "Keymate-Target-Client-Id": "invoice-api",
+          "Keymate-Target-Method": "GET",
+          "Keymate-Target-URI": "/api/v1/tenants/T-001/invoices/INV-999"
+        }
+      },
+      "tokenClaims": {
+        "sub": "invoice-agent",
+        "azp": "invoice-agent",
+        "agent_type": "mcp-client",
+        "trust_level": 4,
+        "actor_id": "user-789",
+        "tenant_id": "T-001"
+      },
+      "normalizedContext": {
+        "agent": {
+          "id": "invoice-agent",
+          "type": "mcp-client",
+          "trust_level": 4
+        },
+        "actor": {
+          "id": "user-789"
+        },
+        "tenant": {
+          "id": "T-001"
+        },
+        "user": {
+          "role": "finance-manager"
+        },
+        "risk": {
+          "score": 8
+        },
+        "resource": {
+          "tenant_id": "T-001",
+          "invoice_id": "INV-999"
+        },
+        "request": {
+          "target_method": "GET",
+          "target_uri": "/api/v1/tenants/T-001/invoices/INV-999",
+          "channel": "AGENT"
+        }
+      },
+      "expected": {
+        "matcherDecision": "MATCH",
+        "matchedRuleId": "agent.invoice.read",
+        "celDecision": "DENY",
+        "finalDecision": "DENY",
+        "failedConditions": [
+          "risk.score <= 5"
+        ]
+      }
+    }
+  ]
+}
