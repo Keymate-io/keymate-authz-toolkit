@@ -7,7 +7,7 @@ import picocli.CommandLine.Command;
     name = "kmctl",
     description = "Keymate CLI",
     mixinStandardHelpOptions = true,
-    version = "kmctl 0.2.0",
+    version = "kmctl 0.1.0",
     subcommands = {
         AuthzCommand.class
     }
